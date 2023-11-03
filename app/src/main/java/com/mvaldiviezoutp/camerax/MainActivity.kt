@@ -5,6 +5,7 @@ import android.content.pm.PackageManager
 import android.graphics.ImageFormat
 import android.graphics.SurfaceTexture
 import android.hardware.camera2.CameraCaptureSession
+import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.CameraDevice
 import android.hardware.camera2.CameraManager
 import android.hardware.camera2.CaptureRequest
@@ -120,7 +121,7 @@ class MainActivity : AppCompatActivity() {
 
     @RequiresPermission(Manifest.permission.CAMERA)
     private fun openCamera() {
-        val cameraId = cameraManager.cameraIdList[0]
+        val cameraId = getFrontCameraId()
         cameraManager.openCamera(cameraId, object : CameraDevice.StateCallback() {
             override fun onOpened(device: CameraDevice) {
                 cameraDevice = device
@@ -188,5 +189,16 @@ class MainActivity : AppCompatActivity() {
         val imageFileName = "IMG_${timestamp}_$imageCounter.jpg"
         imageCounter++
         return imageFileName
+    }
+
+    private fun getFrontCameraId(): String {
+        for (cameraId in cameraManager.cameraIdList) {
+            val characteristics = cameraManager.getCameraCharacteristics(cameraId)
+            val facing = characteristics.get(CameraCharacteristics.LENS_FACING)
+            if (facing == CameraCharacteristics.LENS_FACING_FRONT) {
+                return cameraId
+            }
+        }
+        return cameraManager.cameraIdList[0] // Si no se encuentra una cámara frontal, usar la primera de la lista.
     }
 }
